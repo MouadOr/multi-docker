@@ -1,0 +1,21 @@
+sudo : required
+services:
+        - docker
+before_install: 
+        - docker build -t goldenor/react-test -f client/Dockerfile.dev ./client
+language: generic 
+script:
+  - docker run -e CI=true goldenor/react-test npm test -- --coverage
+after_success: 
+        - docker build -t goldenor/multi-client ./client
+        - docker build -t goldenor/multi-nginx ./nginx
+        - docker build -t goldenor/multi-server ./server
+        - docker build -t goldenor/multi-worker ./worker
+
+#Login into Docker Hub
+        - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+#Push to Docker Hub
+        - docker push goldenor/multi-client
+        - docker push goldenor/multi-nginx
+        - docker push goldenor/multi-server
+        - docker push goldenor/multi-worker
